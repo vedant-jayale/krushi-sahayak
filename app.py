@@ -76,7 +76,13 @@ def get_prices():
                f"&DateFrom={date_from}&DateTo={date_to}&Fr_Date={date_from}&To_Date={date_to}&Tx_Trend=0"
                f"&Tx_CommodityHead={commodity_name}&Tx_StateHead={state_name}&Tx_DistrictHead={district_name}&Tx_MarketHead={market_name}")
 
-        response = requests.get(url)
+        
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        }
+
+       
+        response = requests.get(url, headers=headers)
         soup = BeautifulSoup(response.content, 'html.parser')
 
         # Parsing logic to extract data from the page
