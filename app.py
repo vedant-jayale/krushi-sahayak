@@ -2,6 +2,7 @@ from flask import Flask, render_template, request,make_response
 
 import requests
 from bs4 import BeautifulSoup
+import logging
 
 app = Flask(__name__)
 
@@ -23,6 +24,7 @@ header_translations = {
 # Function to translate headers
 def translate_header(header):
     return header_translations.get(header, header)
+logging.basicConfig(level=logging.DEBUG)   
 
 @app.route('/')
 def home():
