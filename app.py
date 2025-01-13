@@ -71,42 +71,47 @@ def get_prices():
         district_name = request.form['district_name']
         market_name = request.form['market_name']
 
+        # Construct the URL for Agmarknet with the parameters
         url = (f"https://agmarknet.gov.in/SearchCmmMkt.aspx?"
                f"Tx_Commodity={commodity}&Tx_State={state}&Tx_District={district}&Tx_Market={market}"
                f"&DateFrom={date_from}&DateTo={date_to}&Fr_Date={date_from}&To_Date={date_to}&Tx_Trend=0"
                f"&Tx_CommodityHead={commodity_name}&Tx_StateHead={state_name}&Tx_DistrictHead={district_name}&Tx_MarketHead={market_name}")
 
-        
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-        }
+        # Scraper API URL with your API key
+        scraper_api_url = f"http://api.scraperapi.com?api_key=abbd392168a5681912e35e5698f9db14&url={url}"
 
-       
-        response = requests.get(url, headers=headers)
-        soup = BeautifulSoup(response.content, 'html.parser')
+        try:
+            logging.debug(f"Sending request to Scraper API: {scraper_api_url}")
+            # Make the request to Scraper API with timeout and retries
+            response = requests.get(scraper_api_url, timeout=40)
+            response.raise_for_status()  # Check if request was successful
 
-        # Parsing logic to extract data from the page
-        data = []
-        table = soup.find('table', {'class': 'tableagmark_new'})
-        if table:
-            print("Table found")
-            headers = [translate_header(header.text.strip()) for header in table.find_all('th')]
-            print("Headers:", headers)
-            for row in table.find_all('tr')[1:]:
-                cols = row.find_all('td')
-                cols = [col.text.strip() for col in cols]
-                if 'No Data Found' in cols:
-                    data = None
-                    break
-                data.append(dict(zip(headers, cols)))
-                
-        else:
-            print("No table found")
-            # If no table is found, return None or empty data
-            data = None      
+            logging.debug(f"Received response with status code: {response.status_code}")
+
+            # Parse the HTML content returned by Scraper API
+            soup = BeautifulSoup(response.content, 'html.parser')
+
+            # Parsing logic to extract data from the page
+            data = []
+            table = soup.find('table', {'class': 'tableagmark_new'})
+            if table:
+                headers = [translate_header(header.text.strip()) for header in table.find_all('th')]
+                for row in table.find_all('tr')[1:]:
+                    cols = row.find_all('td')
+                    cols = [col.text.strip() for col in cols]
+                    if 'No Data Found' in cols:
+                        data = None
+                        break
+                    data.append(dict(zip(headers, cols)))
+            else:
+                data = None
+
+        except requests.exceptions.Timeout:
+            logging.error("The request timed out.")
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Error during request: {e}")
 
     return render_template('index.html', data=data, form_submitted=form_submitted)
-
 
 if __name__ == '__main__':
     app.run(debug=True)
