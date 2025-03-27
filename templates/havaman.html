@@ -48,11 +48,50 @@
     </script>
 
     <main>
+
+        <!-- Weather Section -->
+        <section class="weather-section">
+            <div class="weather-header">
+                <h2><i class="fas fa-cloud-sun"></i> हवामान अंदाज</h2>
+                <div class="location-selector">
+                    <input type="text" id="location-input" placeholder="शहर/गाव शोधा..." list="suggestions">
+                    <datalist id="suggestions"></datalist>
+                    <button id="search-btn">शोधा<i class="fas fa-search"></i></button>
+                </div>
+            </div>
+
+            <div class="weather-loading" id="weather-loading">
+                <i class="fas fa-spinner fa-spin"></i> हवामान माहिती लोड होत आहे...
+            </div>
+
+            <div class="current-weather" id="current-weather" style="display:none;">
+                <!-- Content will be filled by JavaScript -->
+            </div>
+
+            <div class="forecast-container" id="forecast-container" style="display:none;">
+                <h3>आगामी 7 दिवसांचा अंदाज</h3>
+                <div class="forecast-days" id="forecast-days">
+                    <!-- Content will be filled by JavaScript -->
+                </div>
+            </div>
+
+            <div class="hourly-forecast" id="hourly-forecast" style="display:none;">
+                <h3>आजच्या दिवसाचा तापमान आणि पाऊस</h3>
+                <div class="hourly-chart-container">
+                    <canvas id="hourly-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="weather-advice" id="weather-advice" style="display:none;">
+                <!-- Content will be filled by JavaScript -->
+            </div>
+        </section>
+
+
         <section class="havaman">
             <div class="language-switcher">
                 <button id="marathi" onclick="switchLanguage('marathi')">मराठी</button>
                 <button id="hindi" onclick="switchLanguage('hindi')">हिन्दी</button>
-                <button id="english" onclick="switchLanguage('english')">English</button>
             </div>
 
             <div class="havaman-info">
@@ -88,8 +127,8 @@
     <footer>
         <div class="footer-container">
             <div class="contact-info">
-                <h3>Contact Information:</h3>
-                <p>Mobile Number: +91 9123456789</p>
+                <h3>संपर्क माहिती:</h3>
+                <p>Mobile Number: 987654321x</p>
                 <p>Email: contact@krushisahayak.com</p>
             </div>
             <div class="links">
@@ -119,13 +158,7 @@
                     popularity: "पंजाब डख ने अपनी सटीक और सरल भविष्यवाणी के कारण किसानों में अत्यधिक लोकप्रियता हासिल की है। यह सेवा स्थानीय भाषा में मौसम पूर्वानुमान देने के लिए व्हाट्सएप का उपयोग करती है, जिससे किसानों को समझने में आसानी होती है। जबकि कई किसान पारंपरिक मौसम पूर्वानुमान में उपयोग किए जाने वाले जटिल तकनीकी शब्दों का अर्थ समझने के लिए संघर्ष कर रहे हैं, पंजाब डख सरल भाषा का उपयोग करते हैं, जिससे उन्हें आगामी मौसम की घटनाओं के लिए तैयारी करना आसान होता है।",
                     videoHeader: "अधिक जानकारी के लिए नीचे दिए गए लिंक पर जाएं"
                 },
-                english: {
-                    heading: "Relief for Farmers - New Weather Forecast by Panjabrao Dakh",
-                    intro: "With the constant impact of unpredictable weather patterns on farmers, a new method of weather forecasting has emerged which is proving promising for thousands of farmers in Maharashtra. Panjabrao Dakh's weather forecasting service has surpassed the traditional methods of the Indian Meteorological Department with its accurate predictions, making a significant impact on the state.",
-                    details: "Panjabrao Dakh from Gughli Dhamangaon in Parbhani district of Maharashtra has become famous for his accurate weather forecasts. He has helped farmers in the state prepare for rains and protect their crops from damage. Panjabrao Dakh was partially working as a teacher in a district council school in Parbhani. Now, he works full-time as a weather forecaster serving farmers.",
-                    popularity: "Panjabrao Dakh has gained immense popularity among farmers due to his accurate and straightforward predictions. This service uses WhatsApp to provide weather forecasts in the local language, making it easier for farmers to understand. While many farmers struggle to understand the complex technical terms used in traditional weather forecasts, Panjabrao Dakh uses simple language, making it easier for them to prepare for upcoming weather events.",
-                    videoHeader: "For more information, please visit the below link."
-                }
+               
             };
 
             document.getElementById('heading').textContent = translations[language].heading;
@@ -135,5 +168,471 @@
             document.getElementById('video-header').textContent = translations[language].videoHeader;
         }
     </script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+<script>
+    // Your existing navbar and language switcher code remains the same
+
+    // Weather API Configuration
+    const API_KEY = 'd8483751677e3670919a71517453f60d'; // Replace with your actual API key
+    let weatherChart = null;
+
+    // DOM Elements
+    const locationInput = document.getElementById('location-input');
+    const searchBtn = document.getElementById('search-btn');
+    const currentLocationBtn = document.getElementById('current-location-btn');
+    const weatherLoading = document.getElementById('weather-loading');
+    const currentWeather = document.getElementById('current-weather');
+    const forecastContainer = document.getElementById('forecast-container');
+    const forecastDays = document.getElementById('forecast-days');
+    const hourlyForecast = document.getElementById('hourly-forecast');
+    const weatherAdvice = document.getElementById('weather-advice');
+
+    // Weather icons mapping
+    const weatherIcons = {
+        '01d': 'fas fa-sun',           // clear sky (day)
+        '01n': 'fas fa-moon',          // clear sky (night)
+        '02d': 'fas fa-cloud-sun',     // few clouds (day)
+        '02n': 'fas fa-cloud-moon',    // few clouds (night)
+        '03d': 'fas fa-cloud',         // scattered clouds
+        '03n': 'fas fa-cloud',
+        '04d': 'fas fa-cloud',         // broken clouds
+        '04n': 'fas fa-cloud',
+        '09d': 'fas fa-cloud-rain',    // shower rain
+        '09n': 'fas fa-cloud-rain',
+        '10d': 'fas fa-cloud-sun-rain',// rain (day)
+        '10n': 'fas fa-cloud-moon-rain',// rain (night)
+        '11d': 'fas fa-bolt',          // thunderstorm
+        '11n': 'fas fa-bolt',
+        '13d': 'fas fa-snowflake',    // snow
+        '13n': 'fas fa-snowflake',
+        '50d': 'fas fa-smog',         // mist
+        '50n': 'fas fa-smog'
+    };
+
+    // Hindi weather descriptions
+    const weatherDescriptions = {
+        'clear': 'स्पष्ट आकाश',
+        'clouds': 'ढगाळ',
+        'rain': 'पाऊस',
+        'drizzle': 'सरी',
+        'thunderstorm': 'गडगडाटी वादळ',
+        'snow': 'बर्फ',
+        'mist': 'धुके',
+        'smoke': 'धूर',
+        'haze': 'धुके',
+        'fog': 'धुके'
+    };
+
+    // Initialize - Fetch weather for default location (Parbhani)
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchWeatherByCity('Parbhani');
+    });
+
+    // Event Listeners
+    searchBtn.addEventListener('click', () => {
+        const location = locationInput.value.trim();
+        if (location) {
+            fetchWeatherByCity(location);
+        }
+    });
+
+    locationInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            const location = locationInput.value.trim();
+            if (location) {
+                fetchWeatherByCity(location);
+            }
+        }
+    });
+
+    currentLocationBtn.addEventListener('click', getCurrentLocationWeather);
+
+    // Fetch weather by city name
+    async function fetchWeatherByCity(city) {
+        showLoading();
+        try {
+            // First get coordinates for the city
+            const geoResponse = await fetch(
+                `https://api.openweathermap.org/geo/1.0/direct?q=${city},IN&limit=1&appid=${API_KEY}`
+            );
+            const geoData = await geoResponse.json();
+            
+            if (geoData.length === 0) {
+                throw new Error('स्थान सापडले नाही');
+            }
+            
+            const { lat, lon } = geoData[0];
+            fetchWeatherData(lat, lon, geoData[0].name);
+            
+            // Update suggestions
+            updateSuggestions(city);
+        } catch (error) {
+            showError(error.message);
+        }
+    }
+
+    // Get current location weather
+    function getCurrentLocationWeather() {
+        showLoading();
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const { latitude, longitude } = position.coords;
+                    try {
+                        // Get city name from coordinates
+                        const response = await fetch(
+                            `https://api.openweathermap.org/geo/1.0/reverse?lat=${latitude}&lon=${longitude}&limit=1&appid=${API_KEY}`
+                        );
+                        const locationData = await response.json();
+                        const locationName = locationData[0]?.name || 'तुमचे स्थान';
+                        fetchWeatherData(latitude, longitude, locationName);
+                    } catch (error) {
+                        fetchWeatherData(latitude, longitude, 'तुमचे स्थान');
+                    }
+                },
+                (error) => {
+                    showError('स्थान प्राप्त करण्यात अयशस्वी: ' + error.message);
+                }
+            );
+        } else {
+            showError('ब्राउझर स्थान सेवा समर्थन करत नाही');
+        }
+    }
+
+    // Fetch weather data from coordinates
+    async function fetchWeatherData(lat, lon, locationName) {
+        try {
+            // Fetch current weather and forecast
+            const [currentResponse, forecastResponse] = await Promise.all([
+                fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${API_KEY}&lang=hi`),
+                fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&appid=${API_KEY}&lang=hi`)
+            ]);
+            
+            if (!currentResponse.ok || !forecastResponse.ok) {
+                throw new Error('हवामान माहिती प्राप्त करण्यात अयशस्वी');
+            }
+            
+            const currentData = await currentResponse.json();
+            const forecastData = await forecastResponse.json();
+            
+            displayWeather(currentData, forecastData, locationName);
+        } catch (error) {
+            showError(error.message);
+        }
+    }
+
+    // Display weather data
+    function displayWeather(currentData, forecastData, locationName) {
+        hideLoading();
+        
+        // Display current weather
+        displayCurrentWeather(currentData, locationName);
+        
+        // Display 7-day forecast
+        displayForecast(forecastData);
+        
+        // Display hourly forecast chart
+        displayHourlyForecast(forecastData);
+        
+        // Display weather advice
+        displayWeatherAdvice(currentData, forecastData);
+    }
+
+    function displayCurrentWeather(data, locationName) {
+        const weather = data.weather[0];
+        const iconClass = weatherIcons[weather.icon] || 'fas fa-cloud';
+        
+        currentWeather.innerHTML = `
+            <div class="location-info">
+                <h3><i class="fas fa-map-marker-alt"></i> ${locationName}</h3>
+                <p>${new Date().toLocaleDateString('hi-IN')}</p>
+            </div>
+            <div class="weather-card current">
+                <div class="weather-main">
+                    <div class="weather-icon">
+                        <i class="${iconClass}"></i>
+                    </div>
+                    <div class="weather-temp">
+                        <span class="temp">${Math.round(data.main.temp)}°C</span>
+                        <span class="description">${weatherDescriptions[weather.main.toLowerCase()] || weather.description}</span>
+                        <span class="feels-like">अनुभव: ${Math.round(data.main.feels_like)}°C</span>
+                    </div>
+                </div>
+                <div class="weather-details">
+                    <div class="detail-item">
+                        <i class="fas fa-wind"></i>
+                        <span>हवा: ${data.wind.speed} km/h</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-tint"></i>
+                        <span>आर्द्रता: ${data.main.humidity}%</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-cloud-rain"></i>
+                        <span>पाऊस: ${data.rain ? `${data.rain['1h'] || 0}mm` : '0mm'}</span>
+                    </div>
+                </div>
+            </div>
+            ${shouldShowWeatherAlert(data) ? `
+            <div class="weather-alert">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>${getWeatherAlertMessage(data)}</span>
+            </div>
+            ` : ''}
+        `;
+        currentWeather.style.display = 'block';
+    }
+
+    function displayForecast(data) {
+        // Group forecast by day
+        const dailyForecast = {};
+        data.list.forEach(item => {
+            const date = new Date(item.dt * 1000).toLocaleDateString('hi-IN');
+            if (!dailyForecast[date]) {
+                dailyForecast[date] = [];
+            }
+            dailyForecast[date].push(item);
+        });
+        
+        // Get the next 7 days
+        const forecastDates = Object.keys(dailyForecast).slice(0, 7);
+        
+        forecastDays.innerHTML = '';
+        forecastDates.forEach(date => {
+            const dayData = dailyForecast[date];
+            const dayName = new Date(dayData[0].dt * 1000).toLocaleDateString('hi-IN', { weekday: 'short' });
+            const dayTemp = getDayTemp(dayData);
+            const rain = getDayRain(dayData);
+            const icon = getDayIcon(dayData);
+            
+            const dayElement = document.createElement('div');
+            dayElement.className = 'forecast-day';
+            dayElement.innerHTML = `
+                <div class="day">${dayName}</div>
+                <div class="weather-icon"><i class="${icon}"></i></div>
+                <div class="temp-range">${dayTemp.max}° / ${dayTemp.min}°</div>
+                <div class="rain-chance"><i class="fas fa-tint"></i> ${rain > 0 ? rain + 'mm' : '0mm'}</div>
+            `;
+            forecastDays.appendChild(dayElement);
+        });
+        
+        forecastContainer.style.display = 'block';
+    }
+
+    function displayHourlyForecast(data) {
+        // Get next 24 hours data
+        const hourlyData = data.list.slice(0, 8); // 3-hour intervals for 24 hours
+        
+        const labels = hourlyData.map(item => 
+            new Date(item.dt * 1000).toLocaleTimeString('hi-IN', { hour: '2-digit' })
+        );
+        
+        const temperatures = hourlyData.map(item => Math.round(item.main.temp));
+        const rain = hourlyData.map(item => item.rain ? item.rain['3h'] || 0 : 0);
+        
+        // Create or update chart
+        const ctx = document.getElementById('hourly-chart').getContext('2d');
+        
+        if (weatherChart) {
+            weatherChart.destroy();
+        }
+        
+        weatherChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'तापमान (°C)',
+                        data: temperatures,
+                        borderColor: 'rgb(255, 99, 132)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        yAxisID: 'y',
+                        tension: 0.4
+                    },
+                    {
+                        label: 'पाऊस (mm)',
+                        data: rain,
+                        borderColor: 'rgb(54, 162, 235)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        yAxisID: 'y1',
+                        type: 'bar'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'तापमान (°C)'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'पाऊस (mm)'
+                        },
+                        grid: {
+                            drawOnChartArea: false,
+                        }
+                    }
+                }
+            }
+        });
+        
+        hourlyForecast.style.display = 'block';
+    }
+
+    function displayWeatherAdvice(currentData, forecastData) {
+        let advice = '';
+        const weather = currentData.weather[0].main.toLowerCase();
+        const temp = currentData.main.temp;
+        
+        // Basic farming advice based on weather
+        if (weather === 'rain') {
+            advice = 'पावसाची शक्यता असल्याने, आपल्या शेतातील पाण्याचे निचरा योग्य प्रकारे करा. रासायनिक खते टाकणे टाळा.';
+        } else if (temp > 35) {
+            advice = 'उष्ण तापमान असल्याने, पिकांना पुरेसे पाणी द्या. दुपारच्या वेळी पाणी टाकणे टाळा.';
+        } else if (temp < 10) {
+            advice = 'थंडीच्या लाटा असल्याने, संवेदनशील पिकांचे संरक्षण करा. रात्री पाणी टाकणे टाळा.';
+        } else {
+            advice = 'सध्याचे हवामान शेतीसाठी अनुकूल आहे. नियमित शेती कार्य सुरू ठेवा.';
+        }
+        
+        // Check for rain in next 24 hours
+        const nextRain = forecastData.list.find(item => 
+            item.weather[0].main.toLowerCase() === 'rain' || 
+            item.weather[0].main.toLowerCase() === 'thunderstorm'
+        );
+        
+        if (nextRain) {
+            const rainTime = new Date(nextRain.dt * 1000).toLocaleTimeString('hi-IN');
+            advice += ` संध्याकाळी ${rainTime} वाजता पाऊस पडण्याची शक्यता. योग्य तयारी करा.`;
+        }
+        
+        weatherAdvice.innerHTML = `
+            <h3><i class="fas fa-seedling"></i> शेतकरी सल्ला</h3>
+            <p>${advice}</p>
+        `;
+        weatherAdvice.style.display = 'block';
+    }
+
+    // Helper functions
+    function getDayTemp(dayData) {
+        let max = -Infinity;
+        let min = Infinity;
+        
+        dayData.forEach(item => {
+            max = Math.max(max, item.main.temp_max);
+            min = Math.min(min, item.main.temp_min);
+        });
+        
+        return {
+            max: Math.round(max),
+            min: Math.round(min)
+        };
+    }
+
+    function getDayRain(dayData) {
+        let totalRain = 0;
+        dayData.forEach(item => {
+            if (item.rain) {
+                totalRain += item.rain['3h'] || 0;
+            }
+        });
+        return Math.round(totalRain * 10) / 10; // Round to 1 decimal
+    }
+
+    function getDayIcon(dayData) {
+        // Find the most severe weather condition for the day
+        const severeWeather = ['thunderstorm', 'rain', 'snow', 'drizzle', 'clouds', 'clear'];
+        let icon = 'fas fa-cloud';
+        
+        for (const condition of severeWeather) {
+            const found = dayData.find(item => 
+                item.weather[0].main.toLowerCase() === condition
+            );
+            if (found) {
+                icon = weatherIcons[found.weather[0].icon] || icon;
+                break;
+            }
+        }
+        
+        return icon;
+    }
+
+    function shouldShowWeatherAlert(data) {
+        const weather = data.weather[0].main.toLowerCase();
+        return ['thunderstorm', 'extreme'].includes(weather) || 
+               data.wind.speed > 20 || // High winds
+               (data.rain && data.rain['1h'] > 10); // Heavy rain
+    }
+
+    function getWeatherAlertMessage(data) {
+        const weather = data.weather[0];
+        
+        if (weather.main.toLowerCase() === 'thunderstorm') {
+            return 'चेतावणी: गडगडाटी वादळाची शक्यता! शेतातील उपकरणे सुरक्षित ठेवा.';
+        } else if (data.wind.speed > 20) {
+            return 'चेतावणी: जोरदार वारा! झाडे तुटण्याची शक्यता.';
+        } else if (data.rain && data.rain['1h'] > 10) {
+            return 'चेतावणी: जोरदार पाऊस! शेतात पाणी साचू नये याची काळजी घ्या.';
+        }
+        
+        return 'हवामान चेतावणी: ' + weather.description;
+    }
+
+    async function updateSuggestions(query) {
+        if (query.length < 3) return;
+        
+        try {
+            const response = await fetch(
+                `https://api.openweathermap.org/geo/1.0/direct?q=${query}&limit=5&appid=${API_KEY}`
+            );
+            const data = await response.json();
+            
+            const suggestions = document.getElementById('suggestions');
+            suggestions.innerHTML = '';
+            
+            data.forEach(item => {
+                const option = document.createElement('option');
+                option.value = `${item.name}, ${item.country}`;
+                suggestions.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error fetching suggestions:', error);
+        }
+    }
+
+    function showLoading() {
+        weatherLoading.style.display = 'block';
+        currentWeather.style.display = 'none';
+        forecastContainer.style.display = 'none';
+        hourlyForecast.style.display = 'none';
+        weatherAdvice.style.display = 'none';
+    }
+
+    function hideLoading() {
+        weatherLoading.style.display = 'none';
+    }
+
+    function showError(message) {
+        weatherLoading.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+    }
+</script>
 </body>
 </html>
