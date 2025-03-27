@@ -99,6 +99,378 @@
     padding: 2rem;
 }
 
+
+
+/* Add these new styles to your existing havaman.css */
+
+/* ===== Weather Section - Base Styles ===== */
+.weather-section {
+    max-width: 1000px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #f5f9ff;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  .weather-header {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+  
+  .weather-header h2 {
+    color: #2c5282;
+    font-size: 24px;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .weather-header h2 i {
+    color: #4299e1;
+  }
+  
+  /* ===== Location Selector ===== */
+  .location-selector {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .location-selector input {
+    flex: 1;
+    padding: 10px 15px;
+    border-radius: 5px;
+    border: 1px solid #cbd5e0;
+    font-size: 16px;
+    min-width: 200px;
+    background-color: white;
+  }
+  
+  .location-selector button {
+    padding: 10px 20px;
+    border-radius: 5px;
+    border: none;
+    background-color: #4299e1;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.3s;
+  }
+  
+  .location-selector button:hover {
+    background-color: #3182ce;
+  }
+  
+  /* ===== Loading State ===== */
+  .weather-loading {
+    text-align: center;
+    padding: 30px;
+    font-size: 18px;
+    color: #4a5568;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+  }
+  
+  .weather-loading i {
+    font-size: 24px;
+    color: #4299e1;
+  }
+  
+  /* ===== Current Weather ===== */
+  .current-weather {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+  }
+  
+  .location-info {
+    text-align: center;
+    margin-bottom: 15px;
+  }
+  
+  .location-info h3 {
+    margin: 0;
+    color: #2d3748;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  
+  .location-info p {
+    margin: 5px 0 0;
+    color: #718096;
+  }
+  
+  .weather-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .weather-main {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  
+  .weather-icon {
+    font-size: 48px;
+    color: #f6ad55;
+  }
+  
+  .weather-temp {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .temp {
+    font-size: 36px;
+    font-weight: bold;
+    color: #2d3748;
+  }
+  
+  .description {
+    font-size: 16px;
+    color: #4a5568;
+    margin: 5px 0;
+    text-transform: capitalize;
+  }
+  
+  .feels-like {
+    font-size: 14px;
+    color: #718096;
+  }
+  
+  .weather-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  
+  .detail-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px;
+    color: #4a5568;
+  }
+  
+  .detail-item i {
+    color: #4299e1;
+  }
+  
+  /* ===== Forecast Container ===== */
+  .forecast-container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+  }
+  
+  .forecast-container h3 {
+    color: #2c5282;
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 18px;
+  }
+  
+  .forecast-days {
+    display: flex;
+    overflow-x: auto;
+    gap: 15px;
+    padding-bottom: 10px;
+  }
+  
+  .forecast-day {
+    min-width: 100px;
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    background-color: #ebf8ff;
+  }
+  
+  .day {
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #2b6cb0;
+  }
+  
+  .forecast-day .weather-icon {
+    font-size: 24px;
+    margin: 5px 0;
+    color: #3182ce;
+  }
+  
+  .temp-range {
+    font-size: 14px;
+    color: #2d3748;
+  }
+  
+  .rain-chance {
+    font-size: 12px;
+    color: #3182ce;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+  }
+  
+  .rain-chance i {
+    font-size: 14px;
+  }
+  
+  /* ===== Hourly Forecast ===== */
+  .hourly-forecast {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+  }
+  
+  .hourly-forecast h3 {
+    color: #2c5282;
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 18px;
+  }
+  
+  .hourly-chart-container {
+    position: relative;
+    height: 300px;
+    margin-top: 20px;
+  }
+  
+  /* ===== Weather Advice ===== */
+  .weather-advice {
+    background-color: #f0fff4;
+    border-left: 4px solid #38a169;
+    padding: 15px;
+    border-radius: 5px;
+  }
+  
+  .weather-advice h3 {
+    color: #2f855a;
+    margin-top: 0;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .weather-advice h3 i {
+    font-size: 20px;
+  }
+  
+  .weather-advice p {
+    margin-bottom: 0;
+    color: #4a5568;
+    font-size: 15px;
+  }
+  
+  /* ===== Error State ===== */
+  .weather-error {
+    background-color: #fff5f5;
+    border-left: 4px solid #f56565;
+    padding: 15px;
+    border-radius: 5px;
+    color: #f56565;
+    text-align: center;
+  }
+  
+  /* ===== Mobile Responsive Styles ===== */
+  @media (max-width: 768px) {
+    .weather-section {
+      padding: 15px;
+      margin: 10px;
+    }
+    
+    .location-selector {
+      flex-direction: column;
+    }
+    
+    .location-selector input {
+      width: 100%;
+    }
+    
+    .weather-card {
+      flex-direction: column;
+      gap: 15px;
+    }
+    
+    .weather-main {
+      justify-content: center;
+    }
+    
+    .weather-details {
+      justify-content: center;
+    }
+    
+    .forecast-day {
+      min-width: 80px;
+    }
+    
+    .hourly-chart-container {
+      height: 250px;
+    }
+    
+    .weather-header h2 {
+      font-size: 20px;
+    }
+    
+    .location-selector button {
+      justify-content: center;
+    }
+  }
+  
+  /* Small mobile devices */
+  @media (max-width: 480px) {
+    .weather-section {
+      padding: 10px;
+    }
+    
+    .current-weather,
+    .forecast-container,
+    .hourly-forecast {
+      padding: 15px;
+    }
+    
+    .temp {
+      font-size: 32px;
+    }
+    
+    .weather-icon {
+      font-size: 40px;
+    }
+    
+    .forecast-days {
+      gap: 10px;
+    }
+    
+    .forecast-day {
+      min-width: 70px;
+      padding: 8px;
+    }
+    
+    .hourly-chart-container {
+      height: 200px;
+    }
+  }
+  
 .havaman-info {
     max-width: 800px;
     margin: auto;
